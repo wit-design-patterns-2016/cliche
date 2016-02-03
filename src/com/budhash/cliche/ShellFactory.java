@@ -101,8 +101,10 @@ public class ShellFactory {
      * @param mainHandler Command handler
      * @return Shell that can be either further customized or run directly by calling commandLoop().
      */
-    public static Shell createConsoleShell(String prompt, String appName, Object mainHandler) {
-        return createConsoleShell(prompt, appName, mainHandler, new EmptyMultiMap<String, Object>());
+    public static Shell createConsoleShell(String prompt, String appName, Object mainHandler, CommandProcessor processor) {
+        Shell shell = createConsoleShell(prompt, appName, mainHandler, new EmptyMultiMap<String, Object>());
+        shell.processor = processor;
+        return shell;
     }
 
     /**

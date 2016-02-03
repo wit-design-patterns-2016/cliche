@@ -30,6 +30,8 @@ public class Shell {
 	// TODO : fix this to point to github
 	public static String PROJECT_HOMEPAGE_URL = "http://cliche.sourceforge.net";
 
+    public CommandProcessor processor;
+	
 	private Output output;
 	private Input input;
 	private String appName;
@@ -298,36 +300,43 @@ public class Shell {
 		}
 	}
 
-	private void processCommand(String discriminator, List<Token> tokens)
-			throws CLIException {
-		assert discriminator != null;
-		assert !discriminator.equals("");
+    private void processCommand(String discriminator, List<Token> tokens) throws CLIException {
+        assert discriminator != null;
+        assert ! discriminator.equals("");
 
-		ShellCommand commandToInvoke = commandTable.lookupCommand(
-				discriminator, tokens);
+        ShellCommand commandToInvoke = commandTable.lookupCommand(discriminator, tokens);
 
-		Class<?>[] paramClasses = commandToInvoke.getMethod()
-				.getParameterTypes();
-		Object[] parameters = inputConverter.convertToParameters(tokens,
-				paramClasses, commandToInvoke.getMethod().isVarArgs());
+        Class[] paramClasses = commandToInvoke.getMethod().getParameterTypes();
+        Object[] parameters = inputConverter.convertToParameters(tokens, paramClasses,
+                commandToInvoke.getMethod().isVarArgs());
 
-		outputHeader(commandToInvoke.getHeader(), parameters);
+        outputHeader(commandToInvoke.getHeader(), parameters);
+        
+        long timeBefore = Calendar.getInstance().getTimeInMillis();
+  
+        Object invocationResult = null;
+        //Object invocationResult = commandToInvoke.invoke(parameters);
+        if (processor!= null)
+        {
+          processor.doCommand(commandToInvoke, parameters);
+        }
+        else
+        {
+          invocationResult = commandToInvoke.invoke(parameters);
+        }
+          
+        long timeAfter = Calendar.getInstance().getTimeInMillis();
 
-		long timeBefore = Calendar.getInstance().getTimeInMillis();
-		Object invocationResult = commandToInvoke.invoke(parameters);
-		long timeAfter = Calendar.getInstance().getTimeInMillis();
-
-		if (invocationResult != null) {
-			output.output(invocationResult, outputConverter);
-		}
-		if (displayTime) {
-			final long time = timeAfter - timeBefore;
-			if (time != 0L) {
-				output.output(String.format(TIME_MS_FORMAT_STRING, time),
-						outputConverter);
-			}
-		}
-	}
+        if (invocationResult != null) {
+            output.output(invocationResult, outputConverter);
+        }
+        if (displayTime) {
+            final long time = timeAfter - timeBefore;
+            if (time != 0L) {
+                output.output(String.format(TIME_MS_FORMAT_STRING, time), outputConverter);
+            }
+        }
+    }
 
 	private static final String TIME_MS_FORMAT_STRING = "time: %d ms";
 
